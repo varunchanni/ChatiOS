@@ -114,7 +114,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
             completion(true)
         }
         
-        self.xmppStream.myJID = XMPPJID(string: username)
+        self.xmppStream.myJID = XMPPJID(string: "username@\(hostname)")
         self.password = password
         self.xmppStream.hostPort = 5222
         self.xmppStream.enableBackgroundingOnSocket = true
@@ -163,10 +163,14 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
     func xmppStreamDidConnect(_ sender: XMPPStream!) {
         self.isXmppConnected = true
         do {
-            try self.xmppStream.authenticate(withPassword: password)
+            try self.xmppStream.authenticate(withPassword: password!)
         } catch {
             print("Authentication not successful")
         }
+    }
+    
+    func xmppStream(_ sender: XMPPStream!, didNotAuthenticate error: DDXMLElement!) {
+        
     }
     
     func xmppStream(_ sender: XMPPStream!, didReceive presence: XMPPPresence!) {
