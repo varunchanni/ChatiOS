@@ -9,6 +9,8 @@
 import Foundation
 import XMPPFramework
 
+private let hostname = "10.4.2.153"
+
 class ChatConnectivity: NSObject, XMPPStreamDelegate {
     
     static let sharedConnectivity = ChatConnectivity()
@@ -55,7 +57,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
             self.xmppStream.enableBackgroundingOnSocket = true;
         #endif
         self.xmppStream.addDelegate(self, delegateQueue: DispatchQueue.main)
-        self.xmppStream.hostName = "varuns-macbook-pro.local"
+        self.xmppStream.hostName = hostname
         
         self.xmppMUC = XMPPMUC(dispatchQueue: DispatchQueue.main)
         self.xmppMUC?.activate(xmppStream)
@@ -96,7 +98,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         self.xmppvCardTempModule?.activate(xmppStream)
         self.xmppvCardAvatarModule?.activate(xmppStream)
         
-        self.xmppRoster.subscribePresence(toUser: XMPPJID(string: "channi@varuns-macbook-pro.local"))
+        self.xmppRoster.subscribePresence(toUser: XMPPJID(string: "channi@v\(hostname)"))
     }
     
     func goOffline() {
@@ -175,9 +177,9 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         
         if presenceFromUser != username {
             if presenceType == "available" {
-                chatDelegate.newBuddyOnline(buddyName: "\(String(describing: presenceFromUser!))@varuns-macbook-pro.local")
+                chatDelegate.newBuddyOnline(buddyName: "\(String(describing: presenceFromUser!))@\(hostname)")
             } else if presenceType == "unavailable" {
-                chatDelegate.buddyWentOffline(buddyName: "\(String(describing: presenceFromUser!))@varuns-macbook-pro.local")
+                chatDelegate.buddyWentOffline(buddyName: "\(String(describing: presenceFromUser!))@\(hostname)")
             }
         }
     }
