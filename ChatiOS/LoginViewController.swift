@@ -32,6 +32,7 @@ class LoginViewController: UIViewController {
                 UserDefaults.standard.set(usernameField.text!, forKey: "username")
                 UserDefaults.standard.set(passwordField.text!, forKey: "password")
                 UserDefaults.standard.synchronize()
+                self.dismiss(animated: true, completion: nil)
             } else {
                 print("Error logging in")
             }

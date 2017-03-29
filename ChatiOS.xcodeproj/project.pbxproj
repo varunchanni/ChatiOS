@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		4A304A6C90384761BA0458D6 /* Pods_ChatiOS.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF459A0C6E3CADFA01C7DE89 /* Pods_ChatiOS.framework */; };
+		C277A29F1E8A60F0007A1845 /* ChatDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C277A29E1E8A60F0007A1845 /* ChatDelegate.swift */; };
+		C277A2A11E8A6163007A1845 /* MessageDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C277A2A01E8A6163007A1845 /* MessageDelegate.swift */; };
+		C277A2A31E8A85AE007A1845 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C277A2A21E8A85AE007A1845 /* ChatViewController.swift */; };
+		C277A2A51E8A8617007A1845 /* ChatTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = C277A2A41E8A8617007A1845 /* ChatTableViewCell.swift */; };
+		C277A2A71E8B75D6007A1845 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = C277A2A61E8B75D6007A1845 /* Message.swift */; };
 		C2DB2AFF1E83D7C8005D26C9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DB2AFE1E83D7C8005D26C9 /* AppDelegate.swift */; };
 		C2DB2B011E83D7C8005D26C9 /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DB2B001E83D7C8005D26C9 /* LoginViewController.swift */; };
 		C2DB2B041E83D7C8005D26C9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C2DB2B021E83D7C8005D26C9 /* Main.storyboard */; };
@@ -21,6 +26,11 @@
 		310E794927BAEB70C3737C70 /* Pods-ChatiOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChatiOS.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ChatiOS/Pods-ChatiOS.debug.xcconfig"; sourceTree = "<group>"; };
 		83BF055FCE8C1AAEBE7EAA5E /* Pods-ChatiOS.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ChatiOS.release.xcconfig"; path = "Pods/Target Support Files/Pods-ChatiOS/Pods-ChatiOS.release.xcconfig"; sourceTree = "<group>"; };
 		BF459A0C6E3CADFA01C7DE89 /* Pods_ChatiOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ChatiOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C277A29E1E8A60F0007A1845 /* ChatDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatDelegate.swift; sourceTree = "<group>"; };
+		C277A2A01E8A6163007A1845 /* MessageDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageDelegate.swift; sourceTree = "<group>"; };
+		C277A2A21E8A85AE007A1845 /* ChatViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
+		C277A2A41E8A8617007A1845 /* ChatTableViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatTableViewCell.swift; sourceTree = "<group>"; };
+		C277A2A61E8B75D6007A1845 /* Message.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		C2DB2AFB1E83D7C8005D26C9 /* ChatiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChatiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2DB2AFE1E83D7C8005D26C9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C2DB2B001E83D7C8005D26C9 /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
@@ -77,6 +87,11 @@
 				C2DB2B121E83E41B005D26C9 /* ChatConnectivity.swift */,
 				C2DB2B001E83D7C8005D26C9 /* LoginViewController.swift */,
 				C2DB2B101E83E06B005D26C9 /* BuddyListViewController.swift */,
+				C277A2A21E8A85AE007A1845 /* ChatViewController.swift */,
+				C277A2A41E8A8617007A1845 /* ChatTableViewCell.swift */,
+				C277A29E1E8A60F0007A1845 /* ChatDelegate.swift */,
+				C277A2A61E8B75D6007A1845 /* Message.swift */,
+				C277A2A01E8A6163007A1845 /* MessageDelegate.swift */,
 				C2DB2B021E83D7C8005D26C9 /* Main.storyboard */,
 				C2DB2B051E83D7C8005D26C9 /* Assets.xcassets */,
 				C2DB2B071E83D7C8005D26C9 /* LaunchScreen.storyboard */,
@@ -124,7 +139,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0820;
-				LastUpgradeCheck = 0820;
+				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = Codination;
 				TargetAttributes = {
 					C2DB2AFA1E83D7C8005D26C9 = {
@@ -220,8 +235,13 @@
 			files = (
 				C2DB2B131E83E41B005D26C9 /* ChatConnectivity.swift in Sources */,
 				C2DB2B111E83E06B005D26C9 /* BuddyListViewController.swift in Sources */,
+				C277A2A11E8A6163007A1845 /* MessageDelegate.swift in Sources */,
+				C277A2A71E8B75D6007A1845 /* Message.swift in Sources */,
+				C277A2A31E8A85AE007A1845 /* ChatViewController.swift in Sources */,
 				C2DB2B011E83D7C8005D26C9 /* LoginViewController.swift in Sources */,
+				C277A2A51E8A8617007A1845 /* ChatTableViewCell.swift in Sources */,
 				C2DB2AFF1E83D7C8005D26C9 /* AppDelegate.swift in Sources */,
+				C277A29F1E8A60F0007A1845 /* ChatDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -342,6 +362,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 310E794927BAEB70C3737C70 /* Pods-ChatiOS.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 35R2T2Y29D;
 				INFOPLIST_FILE = ChatiOS/Info.plist;
@@ -356,6 +377,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 83BF055FCE8C1AAEBE7EAA5E /* Pods-ChatiOS.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = 35R2T2Y29D;
 				INFOPLIST_FILE = ChatiOS/Info.plist;
