@@ -33,6 +33,13 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let indexPath = self.buddyTableView.indexPathForSelectedRow {
+            self.buddyTableView.deselectRow(at: indexPath, animated: true)
+        }
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
