@@ -10,7 +10,7 @@ import Foundation
 
 class Message {
     var jid: String!
-    var outgoing: Bool!
+    var outgoing: Bool = false
     var text: String!
     var timeStamp: Date!
     
