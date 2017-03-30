@@ -9,7 +9,7 @@
 import Foundation
 import XMPPFramework
 
-private let hostname = "10.4.2.153"
+private let hostname = "10.175.172.52"
 
 class ChatConnectivity: NSObject, XMPPStreamDelegate {
     
@@ -38,6 +38,8 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
     var isFriendRequest:Bool = false
     var isLogin: Bool = false
     var isXmppConnected = false
+    var allowSelfSignedCertificates = false
+    var allowSSLHostNameMismatch = false
     
     var password: String!
     
@@ -97,8 +99,10 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         
         self.xmppvCardTempModule?.activate(xmppStream)
         self.xmppvCardAvatarModule?.activate(xmppStream)
+        //self.xmppRoster.subscribePresence(toUser: XMPPJID(string: "channi@v\(hostname)"))
         
-        self.xmppRoster.subscribePresence(toUser: XMPPJID(string: "channi@v\(hostname)"))
+        allowSelfSignedCertificates = true;
+        allowSSLHostNameMismatch    = false;
     }
     
     func goOffline() {
@@ -113,10 +117,11 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         if xmppStream.isConnected() {
             completion(true)
         }
-        
-        self.xmppStream.myJID = XMPPJID(string: "username@\(hostname)")
+        let myJid = XMPPJID(string:"\(username)@\(hostname)")
+        self.xmppStream.myJID = myJid
         self.password = password
         self.xmppStream.hostPort = 5222
+        self.xmppStream.hostName = hostname
         self.xmppStream.enableBackgroundingOnSocket = true
         
         do {
@@ -138,7 +143,6 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
     
     func sendMessage(_ msg: String, toUser userId: String, completion:@escaping (Bool) -> Void) {
         
-//        let senderJID = XMPPJID(string: "channi@varuns-macbook-pro.local")
         let senderJID = XMPPJID(string: userId)
         let message = XMPPMessage(type: "chat", to: senderJID)
         
@@ -160,6 +164,42 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         sender.send(XMPPPresence())
     }
     
+    func xmppStream(_ sender: XMPPStream!, willSecureWithSettings settings: NSMutableDictionary!) {
+        let expectedCertName:Any?
+        let serverDomain = xmppStream.hostName;
+        let virtualDomain = xmppStream.myJID.domain;
+        
+        if (serverDomain == nil)
+        {
+            expectedCertName = virtualDomain;
+        }
+        else
+        {
+            expectedCertName = serverDomain;
+        }
+        
+        if ((expectedCertName) != nil)
+        {
+            settings.setObject(expectedCertName ?? "", forKey: kCFStreamSSLPeerName as! NSCopying)
+        }
+    }
+    
+    func xmppStream(_ sender: XMPPStream!, didReceive trust: SecTrust!, completionHandler: ((Bool) -> Void)!) {
+        
+    }
+    
+    func xmppStreamDidSecure(_ sender: XMPPStream!) {
+        
+    }
+    
+    func xmppStreamDidRegister(_ sender: XMPPStream!) {
+        
+    }
+    
+    func xmppStream(_ sender: XMPPStream!, didNotRegister error: DDXMLElement!) {
+        
+    }
+    
     func xmppStreamDidConnect(_ sender: XMPPStream!) {
         self.isXmppConnected = true
         do {
@@ -170,7 +210,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
     }
     
     func xmppStream(_ sender: XMPPStream!, didNotAuthenticate error: DDXMLElement!) {
-        
+        print("Authentication not successful")
     }
     
     func xmppStream(_ sender: XMPPStream!, didReceive presence: XMPPPresence!) {
