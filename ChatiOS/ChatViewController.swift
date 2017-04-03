@@ -31,7 +31,9 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.chatTable.scrollToRow(at: IndexPath(row: self.chatMessages.count - 1, section: 0), at: .bottom, animated: true)
+        if self.chatMessages.count > 0 {
+            self.chatTable.scrollToRow(at: IndexPath(row: self.chatMessages.count - 1, section: 0), at: .bottom, animated: true)
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -49,7 +51,9 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
         }
         DispatchQueue.main.async {
             self.chatTable.reloadData()
-            self.chatTable.scrollToRow(at: IndexPath(row: self.chatMessages.count - 1, section: 0), at: .bottom, animated: true)
+            if self.chatMessages.count > 0 {
+                self.chatTable.scrollToRow(at: IndexPath(row: self.chatMessages.count - 1, section: 0), at: .bottom, animated: true)
+            }
         }
     }
     

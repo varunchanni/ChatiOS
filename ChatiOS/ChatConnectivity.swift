@@ -9,7 +9,9 @@
 import Foundation
 import XMPPFramework
 
-class ChatConnectivity: NSObject, XMPPStreamDelegate {
+let hostName = "varuns-macbook-pro.local"
+
+class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     
     static let sharedConnectivity = ChatConnectivity()
     
@@ -55,7 +57,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
             self.xmppStream.enableBackgroundingOnSocket = true;
         #endif
         self.xmppStream.addDelegate(self, delegateQueue: DispatchQueue.main)
-        self.xmppStream.hostName = "varuns-macbook-pro.local"
+        self.xmppStream.hostName = hostName
         
         self.xmppMUC = XMPPMUC(dispatchQueue: DispatchQueue.main)
         self.xmppMUC?.activate(xmppStream)
@@ -96,7 +98,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         self.xmppvCardTempModule?.activate(xmppStream)
         self.xmppvCardAvatarModule?.activate(xmppStream)
         
-        self.xmppRoster.subscribePresence(toUser: XMPPJID(string: "channi@varuns-macbook-pro.local"))
+//        self.xmppRoster.subscribePresence(toUser: XMPPJID(string: "channi@varuns-macbook-pro.local"))
     }
     
     func goOffline() {
@@ -134,6 +136,79 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         
     }
     
+    func getAllFriends() -> [AnyObject] {
+        
+        var friends_Arc = [AnyObject]()
+        
+        if let moc = self.xmppRosterStorage.mainThreadManagedObjectContext {
+            
+            let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPUserCoreDataStorageObject", in: moc)
+            
+            let sort1 = NSSortDescriptor(key: "sectionNum", ascending: true)
+            let sort2 = NSSortDescriptor(key: "displayName", ascending: true)
+            
+            let predicateFrmt = "ask == nil"
+            let predicate = NSPredicate(format: predicateFrmt)
+            
+            let request = NSFetchRequest<NSFetchRequestResult>()
+            request.sortDescriptors = [sort1, sort2]
+            request.predicate = predicate
+            request.entity = entityDescription
+            
+            do {
+                friends_Arc = try moc.fetch(request) as [AnyObject]
+            } catch {
+                print("Unable to fetch message")
+            }
+        }
+        
+        for friend in friends_Arc {
+            let friendObject = friend as! XMPPUserCoreDataStorageObject
+            print(friendObject.nickname)
+            print(friendObject.displayName)
+            print(friendObject.sectionName)
+        }
+        
+        return friends_Arc
+    }
+    
+    func getChatRooms() {
+        
+//        let serverJID = XMPPJID(string: hostName)
+//        let iq = XMPPIQ(type: "get", to: serverJID)
+//        
+//        iq?.addAttribute(withName: "id", stringValue: "chatroom_list")
+//        iq?.addAttribute(withName: "from", stringValue: xmppStream.myJID.full())
+//        
+//        let query = DDXMLElement(name: "query")
+//        query.addAttribute(withName: "xmlns", stringValue: "http://jabber.org/protocol/disco#items")
+//        iq?.addChild(query)
+//        xmppStream.send(iq)
+        
+//        var messages_arc = [AnyObject]()
+//        let storage = XMPPRoomCoreDataStorage.sharedInstance()
+//        if let moc = storage?.mainThreadManagedObjectContext {
+//            let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPMessageArchiving_Message_CoreDataObject", in: moc)
+//            let request = NSFetchRequest<NSFetchRequestResult>()
+//            //request.fetchLimit = 10
+//            let sort = NSSortDescriptor(key: "timestamp", ascending: true)
+//            request.sortDescriptors = [sort]
+//            let predicateFrmt = "bareJidStr like %@ "
+//            let predicate = NSPredicate(format: predicateFrmt, jid)
+//            request.predicate = predicate
+//            request.entity = entityDescription
+//            do {
+//                messages_arc = try moc.fetch(request) as [AnyObject]
+//            } catch {
+//                print("Unable to fetch message")
+//            }
+//        }
+//        
+//        return messages_arc
+
+        
+    }
+    
     func sendMessage(_ msg: String, toUser userId: String, completion:@escaping (Bool) -> Void) {
         
 //        let senderJID = XMPPJID(string: "channi@varuns-macbook-pro.local")
@@ -147,9 +222,44 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         }
     }
     
-    func addBuddy(userId: String) {
+    func addBuddy(userId: String, groups: [String]) {
         let newBuddy = XMPPJID(string: userId)
-        self.xmppRoster.addUser(newBuddy, withNickname: "channi", groups: ["friends"], subscribeToPresence: true)
+        self.xmppRoster.addUser(newBuddy, withNickname: userId, groups: groups, subscribeToPresence: true)
+        self.xmppRoster.subscribePresence(toUser: newBuddy)
+    }
+    
+    func createChatRoom(_ roomName: String) {
+        
+        let roomStorage = XMPPRoomMemoryStorage()
+        
+        let roomJid = XMPPJID(string: "\(roomName)@conference.\(hostName)")
+        let xmppRoom = XMPPRoom(roomStorage: roomStorage, jid: roomJid, dispatchQueue: DispatchQueue.main)
+        xmppRoom?.activate(self.xmppStream)
+        xmppRoom?.addDelegate(self, delegateQueue: DispatchQueue.main)
+        xmppRoom?.join(usingNickname: self.xmppStream.myJID.user, history: nil)
+    }
+    
+    func loadMessageWithJid(jid: String) -> [AnyObject] {
+        var messages_arc = [AnyObject]()
+        let storage = XMPPMessageArchivingCoreDataStorage.sharedInstance()
+        if let moc = storage?.mainThreadManagedObjectContext {
+            let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPMessageArchiving_Message_CoreDataObject", in: moc)
+            let request = NSFetchRequest<NSFetchRequestResult>()
+            //request.fetchLimit = 10
+            let sort = NSSortDescriptor(key: "timestamp", ascending: true)
+            request.sortDescriptors = [sort]
+            let predicateFrmt = "bareJidStr like %@ "
+            let predicate = NSPredicate(format: predicateFrmt, jid)
+            request.predicate = predicate
+            request.entity = entityDescription
+            do {
+                messages_arc = try moc.fetch(request) as [AnyObject]
+            } catch {
+                print("Unable to fetch message")
+            }
+        }
+        
+        return messages_arc
     }
     
     //MARK:- Delegate Methods
@@ -175,42 +285,89 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate {
         
         if presenceFromUser != username {
             if presenceType == "available" {
-                chatDelegate.newBuddyOnline(buddyName: "\(String(describing: presenceFromUser!))@varuns-macbook-pro.local")
+                chatDelegate.newBuddyOnline(buddyName: "\(String(describing: presenceFromUser!))@\(hostName)")
             } else if presenceType == "unavailable" {
-                chatDelegate.buddyWentOffline(buddyName: "\(String(describing: presenceFromUser!))@varuns-macbook-pro.local")
+                chatDelegate.buddyWentOffline(buddyName: "\(String(describing: presenceFromUser!))@\(hostName)")
             }
         }
     }
     
     func xmppStream(_ sender: XMPPStream!, didReceive message: XMPPMessage!) {
-    
-        let msg = String(describing: message.body()!)
-        let from = String(describing: message.from()!)
+        print(message)
         
-        let newMessage: [String : String] = ["msg" : msg, "sender" : from]
-        messageDelegate.newMessageReceived(messageContent: newMessage)
-    }
-    
-    func loadMessageWithJid(jid: String) -> [AnyObject] {
-        var messages_arc = [AnyObject]()
-        let storage = XMPPMessageArchivingCoreDataStorage.sharedInstance()
-        if let moc = storage?.mainThreadManagedObjectContext {
-            let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPMessageArchiving_Message_CoreDataObject", in: moc)
-            let request = NSFetchRequest<NSFetchRequestResult>()
-            //request.fetchLimit = 10
-            let sort = NSSortDescriptor(key: "timestamp", ascending: true)
-            request.sortDescriptors = [sort]
-            let predicateFrmt = "bareJidStr like %@ "
-            let predicate = NSPredicate(format: predicateFrmt, jid)
-            request.predicate = predicate
-            request.entity = entityDescription
-            do {
-                messages_arc = try moc.fetch(request) as [AnyObject]
-            } catch {
-                print("Unable to fetch message")
+        if message.isChatMessageWithBody() {
+            if message.type() == "groupchat" {
+                
+                let msg = message.elements(forName: "body").first?.stringValue
+                let from = message.elements(forName: "from").first?.stringValue
+                
+                let newMessage: [String : String] = ["msg" : msg!, "sender" : from!]
+                messageDelegate.newMessageReceived(messageContent: newMessage)
+
+            }
+        } else {
+            if message.type() == "groupchat" {
+                let arrSplitedVal = message.from().full().components(separatedBy: "/")
+                
+                if arrSplitedVal.count == 2 {
+                    let strFrom = arrSplitedVal.last
+                    
+                    if self.xmppStream.myJID.user != strFrom {
+                        if let _ = message.elements(forName: "composing").first?.stringValue {
+                            print("is composing")
+                        } else if let _ = message.elements(forName: "paused").first?.stringValue {
+                            print("is composing")
+                        } else if let _ = message.elements(forName: "gone").first?.stringValue {
+                            print("is gone")
+                        } else if let _ = message.elements(forName: "inactive").first?.stringValue {
+                            print("is inactive")
+                        }
+                    }
+                }
             }
         }
         
-        return messages_arc
+    }
+    
+    func xmppStream(_ sender: XMPPStream!, didReceive iq: XMPPIQ!) -> Bool {
+        print(iq.description)
+        return true
+    }
+    
+    //MARK:- Room Delegate Methods
+    
+    func xmppRoomDidCreate(_ sender: XMPPRoom!) {
+        print("Room created \n\(sender)")
+    }
+    
+    func xmppRoomDidJoin(_ sender: XMPPRoom!) {
+        print("I joined room")
+        sender.fetchConfigurationForm()
+//        [sender inviteUser:[XMPPJID jidWithString:@"keithoys"] withMessage:@"Greetings!"];
+        let xmppJids = [XMPPJID(string: "amrit@\(hostName)"), XMPPJID(string: "channi@\(hostName)")]
+        sender.inviteUsers(xmppJids as! [XMPPJID], withMessage: "hello")
+    }
+    
+    func xmppRoom(_ sender: XMPPRoom!, didReceive message: XMPPMessage!, fromOccupant occupantJID: XMPPJID!) {
+        print(message)
+    }
+    
+    func xmppRoom(_ sender: XMPPRoom!, didFetchConfigurationForm configForm: DDXMLElement!) {
+        print(configForm)
+        let newForm = configForm.copy() as! DDXMLElement
+        for field in newForm.elements(forName: "field") {
+            if let _var = field.attributeStringValue(forName: "var") {
+                
+                switch _var {
+                case "muc#roomconfig_persistentroom":
+                    field.remove(forName: "value")
+                    field.addChild(DDXMLElement(name: "value", numberValue: 1))
+                    
+                default:
+                    break
+                }
+            }
+        }
+        sender.configureRoom(usingOptions: newForm)
     }
 }

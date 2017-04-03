@@ -11,7 +11,17 @@ import UIKit
 class BuddyListViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, ChatDelegate {
 
     @IBOutlet weak var buddyTableView: UITableView!
+    
+    @IBOutlet weak var addBuddyView: UIView!
+    @IBOutlet weak var addBuddyButton: UIBarButtonItem!
+    @IBOutlet weak var buddyNameField: UITextField!
+    @IBOutlet weak var groupNameField: UITextField!
+    @IBOutlet weak var segmentChat: UISegmentedControl!
+    @IBOutlet weak var buddyNameLabel: UILabel!
+    @IBOutlet weak var groupNameLabel: UILabel!
+    
     var onlineBuddies: [String] = [String]()
+    var allFriends: [AnyObject] = [AnyObject]()
     
     var onlineFriends: [String] = []
     var selectedUserId: String = String()
@@ -25,12 +35,15 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if !ChatConnectivity.sharedConnectivity.isXmppConnected {
+        let sharedConnection = ChatConnectivity.sharedConnectivity
+        
+        if !sharedConnection.isXmppConnected {
             self.performSegue(withIdentifier: "showLoginScreenId", sender: self)
         } else {
-            ChatConnectivity.sharedConnectivity.chatDelegate = self
-            self.getAllUsers()
+            sharedConnection.chatDelegate = self
         }
+        
+        allFriends = sharedConnection.getAllFriends()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -45,6 +58,24 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         // Dispose of any resources that can be recreated.
     }
     
+    @IBAction func segmentBarValueChanged(_ sender: UISegmentedControl) {
+        
+        var title = "Buddies"
+        if sender.selectedSegmentIndex == 1 {
+            title = "Chat Roms"
+            ChatConnectivity.sharedConnectivity.getChatRooms()
+            
+            buddyNameLabel.text = "Chat Room"
+            groupNameField.isHidden = true
+            groupNameLabel.isHidden = true
+        } else {
+            
+            buddyNameLabel.text = "Buddy Name"
+            groupNameField.isHidden = false
+            groupNameLabel.isHidden = false
+        }
+        self.title = title
+    }
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
@@ -57,8 +88,44 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         }
     }
     
-    func getAllUsers() {
+    @IBAction func showAddBuddyView(_ sender: UIBarButtonItem) {
         
+        if self.addBuddyView.alpha == 0.0 {
+            self.addBuddyView.isHidden = false
+        }
+        
+        UIView.animate(withDuration: 0.25,
+                       animations: { 
+                        self.addBuddyView.alpha = self.addBuddyView.alpha == 1.0 ? 0.0 : 1.0
+        }) { (success) in
+            
+            let viewBarButton = self.addBuddyButton.value(forKey: "view") as! UIView
+            let imageView = viewBarButton.subviews.first! as! UIImageView
+            
+            UIView.animate(withDuration: 0.10, animations: {
+                if self.addBuddyView.alpha == 1.0 {
+                    imageView.contentMode = .center
+                    imageView.autoresizingMask = []
+                    imageView.clipsToBounds = false
+                    imageView.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi / 4))
+                    
+                } else {
+                    imageView.transform = CGAffineTransform.identity
+                    self.addBuddyView.alpha = 0.0
+                    self.addBuddyView.isHidden = true
+                }
+            })
+        }
+    }
+    
+    @IBAction func addBuddyButtonAction(_ sender: UIButton) {
+        
+        let sharedConnection = ChatConnectivity.sharedConnectivity
+        if self.segmentChat.selectedSegmentIndex == 0 {
+            sharedConnection.addBuddy(userId: self.buddyNameField.text!, groups: [self.groupNameField.text!])
+        } else {
+            sharedConnection.createChatRoom(buddyNameField.text!)
+        }
     }
     
     //MARK:- Chat Delegates
