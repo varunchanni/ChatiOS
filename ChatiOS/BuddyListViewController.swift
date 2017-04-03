@@ -26,24 +26,11 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
     var onlineFriends: [String] = []
     var selectedUserId: String = String()
     
+    var groups = [String]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
         // Do any additional setup after loading the view.
-    }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        let sharedConnection = ChatConnectivity.sharedConnectivity
-        
-        if !sharedConnection.isXmppConnected {
-            self.performSegue(withIdentifier: "showLoginScreenId", sender: self)
-        } else {
-            sharedConnection.chatDelegate = self
-        }
-        
-        allFriends = sharedConnection.getAllFriends()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -57,6 +44,8 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
+    
+    
     
     @IBAction func segmentBarValueChanged(_ sender: UISegmentedControl) {
         
@@ -75,19 +64,29 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
             groupNameLabel.isHidden = false
         }
         self.title = title
+        buddyTableView.reloadData()
     }
     // MARK: - Navigation
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
         if segue.identifier == "ChatViewStoryboardID" {
             let chatViewController = segue.destination as! ChatViewController
             chatViewController.isGroup = segmentChat.selectedSegmentIndex == 0 ? false : true
             chatViewController.chatUserId = self.selectedUserId
         }
     }
+    
+    func authenticationUpdate(isAuthenticated:Bool) {
+        let sharedConnection = ChatConnectivity.sharedConnectivity
+        if !isAuthenticated {
+            self.performSegue(withIdentifier: "showLoginScreenId", sender: self)
+        } else {
+            sharedConnection.chatDelegate = self
+        }
+        allFriends = sharedConnection.getAllFriends()
+    }
+    
+    // MARK: - Action Method
     
     @IBAction func showAddBuddyView(_ sender: UIBarButtonItem) {
         
@@ -125,7 +124,9 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         if self.segmentChat.selectedSegmentIndex == 0 {
             sharedConnection.addBuddy(userId: self.buddyNameField.text!, groups: [self.groupNameField.text!])
         } else {
-            sharedConnection.createChatRoom(buddyNameField.text!)
+            sharedConnection.createOrJoinChatRoom(buddyNameField.text!)
+            self.selectedUserId = buddyNameField.text!
+            self.performSegue(withIdentifier: "ChatViewStoryboardID", sender: self)
         }
     }
     
@@ -143,19 +144,28 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
     //MARK:- TableView Delegate & DataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return onlineBuddies.count
+        return segmentChat.selectedSegmentIndex == 0 ?  onlineBuddies.count : groups.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "UserCellID")
         let userLabel: UILabel = cell?.contentView.viewWithTag(10) as! UILabel
-        userLabel.text = self.onlineBuddies[indexPath.row]
+        let buddyName = segmentChat.selectedSegmentIndex == 0 ?  onlineBuddies[indexPath.row] : groups[indexPath.row]
+        if let range: Range<String.Index> = buddyName.range(of: "@") {
+            userLabel.text = buddyName.substring(to: range.lowerBound)
+        }
         return cell!
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        self.selectedUserId = onlineBuddies[indexPath.row]
+        self.selectedUserId = segmentChat.selectedSegmentIndex == 0 ?  onlineBuddies[indexPath.row] : groups[indexPath.row]
+        if segmentChat.selectedSegmentIndex == 1 {
+            if let range: Range<String.Index> = selectedUserId.range(of: "@") {
+                let name = selectedUserId.substring(to: range.lowerBound)
+                ChatConnectivity.sharedConnectivity.createOrJoinChatRoom(name)
+            }
+        }
         self.performSegue(withIdentifier: "ChatViewStoryboardID", sender: self)
     }
 }

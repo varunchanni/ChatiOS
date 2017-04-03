@@ -174,44 +174,18 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     
     func getChatRooms() {
         
-//        let serverJID = XMPPJID(string: hostName)
-//        let iq = XMPPIQ(type: "get", to: serverJID)
-//        
-//        iq?.addAttribute(withName: "id", stringValue: "chatroom_list")
-//        iq?.addAttribute(withName: "from", stringValue: xmppStream.myJID.full())
-//        
-//        let query = DDXMLElement(name: "query")
-//        query.addAttribute(withName: "xmlns", stringValue: "http://jabber.org/protocol/disco#items")
-//        iq?.addChild(query)
-//        xmppStream.send(iq)
-        
-//        var messages_arc = [AnyObject]()
-//        let storage = XMPPRoomCoreDataStorage.sharedInstance()
-//        if let moc = storage?.mainThreadManagedObjectContext {
-//            let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPMessageArchiving_Message_CoreDataObject", in: moc)
-//            let request = NSFetchRequest<NSFetchRequestResult>()
-//            //request.fetchLimit = 10
-//            let sort = NSSortDescriptor(key: "timestamp", ascending: true)
-//            request.sortDescriptors = [sort]
-//            let predicateFrmt = "bareJidStr like %@ "
-//            let predicate = NSPredicate(format: predicateFrmt, jid)
-//            request.predicate = predicate
-//            request.entity = entityDescription
-//            do {
-//                messages_arc = try moc.fetch(request) as [AnyObject]
-//            } catch {
-//                print("Unable to fetch message")
-//            }
-//        }
-//        
-//        return messages_arc
+        let serverJID = XMPPJID(string: "conference.\(hostName)")
+        let iq = XMPPIQ(type: "get", to: serverJID)
+        iq?.addAttribute(withName: "id", stringValue: "chatroom_list")
+        iq?.addAttribute(withName: "from", stringValue: xmppStream.myJID.full())
+        let query = DDXMLElement(name: "query")
+        query.addAttribute(withName: "xmlns", stringValue: "http://jabber.org/protocol/disco#items")
+        iq?.addChild(query)
+        xmppStream.send(iq)
 
-        
     }
     
     func sendMessage(_ msg: String, toUser userId: String, completion:@escaping (Bool) -> Void) {
-        
-//        let senderJID = XMPPJID(string: "channi@varuns-macbook-pro.local")
         let senderJID = XMPPJID(string: userId)
         let message = XMPPMessage(type: "chat", to: senderJID)
         
@@ -243,7 +217,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         self.xmppRoster.subscribePresence(toUser: newBuddy)
     }
     
-    func createChatRoom(_ roomName: String) {
+    func createOrJoinChatRoom(_ roomName: String) {
         
         let roomStorage = XMPPRoomMemoryStorage()
         
@@ -281,6 +255,21 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     
     func xmppStreamDidAuthenticate(_ sender: XMPPStream!) {
         sender.send(XMPPPresence())
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let navigation = appDelegate.window?.rootViewController as! UINavigationController
+        if navigation.topViewController is BuddyListViewController {
+            let blvc = navigation.topViewController as! BuddyListViewController
+            blvc.authenticationUpdate(isAuthenticated: true)
+        }
+    }
+    
+    func xmppStream(_ sender: XMPPStream!, didNotAuthenticate error: DDXMLElement!) {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let navigation = appDelegate.window?.rootViewController as! UINavigationController
+        if navigation.topViewController is BuddyListViewController {
+            let blvc = navigation.topViewController as! BuddyListViewController
+            blvc.authenticationUpdate(isAuthenticated: false)
+        }
     }
     
     func xmppStreamDidConnect(_ sender: XMPPStream!) {
@@ -297,12 +286,13 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         let presenceType = presence.type()
         let username = sender.myJID.user
         let presenceFromUser = presence.from().user
-        
-        if presenceFromUser != username {
-            if presenceType == "available" {
-                chatDelegate.newBuddyOnline(buddyName: "\(String(describing: presenceFromUser!))@\(hostName)")
-            } else if presenceType == "unavailable" {
-                chatDelegate.buddyWentOffline(buddyName: "\(String(describing: presenceFromUser!))@\(hostName)")
+        if !presence.from().domain.contains("conference") {
+            if presenceFromUser != username {
+                if presenceType == "available" {
+                    chatDelegate.newBuddyOnline(buddyName: "\(String(describing: presenceFromUser!))@\(hostName)")
+                } else if presenceType == "unavailable" {
+                    chatDelegate.buddyWentOffline(buddyName: "\(String(describing: presenceFromUser!))@\(hostName)")
+                }
             }
         }
     }
@@ -329,10 +319,11 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
             if let type = message.type() {
                 if type == "groupchat" {
                     if let deleagte = messageDelegate {
-                        let msg = message.elements(forName: "body").first?.stringValue
-                        let from = message.from().user
-                        let newMessage: [String : String] = ["msg" : msg!, "sender" : from!]
-                        deleagte.newMessageReceived(messageContent: newMessage)
+                        if let msg = message.elements(forName: "body").first?.stringValue {
+                            let from = message.from().user
+                            let newMessage: [String : String] = ["msg" : msg, "sender" : from!]
+                            deleagte.newMessageReceived(messageContent: newMessage)
+                        }
                     }
                     
                     let arrSplitedVal = message.from().full().components(separatedBy: "/")
@@ -360,6 +351,21 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     
     func xmppStream(_ sender: XMPPStream!, didReceive iq: XMPPIQ!) -> Bool {
         print(iq.description)
+        if iq.elementID() == "chatroom_list" {
+            var chatRooms = [String]()
+            if let array = iq.elements(forName: "query").first?.elements(forName: "item") {
+                for item in array {
+                    let name = item.attributeStringValue(forName: "jid")
+                    chatRooms.append(name ?? "")
+                }
+                let appDelegate = UIApplication.shared.delegate as! AppDelegate
+                let navigation = appDelegate.window?.rootViewController as! UINavigationController
+                if navigation.topViewController is BuddyListViewController {
+                    let blvc = navigation.topViewController as! BuddyListViewController
+                    blvc.groups = chatRooms
+                }
+            }
+        }
         return true
     }
     
