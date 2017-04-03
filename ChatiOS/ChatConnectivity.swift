@@ -9,7 +9,7 @@
 import Foundation
 import XMPPFramework
 
-let hostName = "varuns-macbook-pro.local"
+let hostName = "amrits-macbook-pro.local"
 
 class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     
@@ -222,6 +222,21 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         }
     }
     
+    func sendMessageToGroup(_ msg: String, toUser userId: String, completion:@escaping (Bool) -> Void) {
+        
+        if let range: Range<String.Index> = userId.range(of: "@") {
+            let name = userId.substring(to: range.lowerBound)
+            let senderJID = XMPPJID(string: "\(name)@conference.\(hostName)")
+            let message = XMPPMessage(type: "chat", to: senderJID)
+            
+            message?.addBody(msg)
+            xmppRoom?.send(message)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                completion(true)
+            }
+        }
+    }
+    
     func addBuddy(userId: String, groups: [String]) {
         let newBuddy = XMPPJID(string: userId)
         self.xmppRoster.addUser(newBuddy, withNickname: userId, groups: groups, subscribeToPresence: true)
@@ -233,7 +248,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         let roomStorage = XMPPRoomMemoryStorage()
         
         let roomJid = XMPPJID(string: "\(roomName)@conference.\(hostName)")
-        let xmppRoom = XMPPRoom(roomStorage: roomStorage, jid: roomJid, dispatchQueue: DispatchQueue.main)
+        xmppRoom = XMPPRoom(roomStorage: roomStorage, jid: roomJid, dispatchQueue: DispatchQueue.main)
         xmppRoom?.activate(self.xmppStream)
         xmppRoom?.addDelegate(self, delegateQueue: DispatchQueue.main)
         xmppRoom?.join(usingNickname: self.xmppStream.myJID.user, history: nil)
@@ -304,23 +319,37 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
                 let newMessage: [String : String] = ["msg" : msg!, "sender" : from!]
                 messageDelegate.newMessageReceived(messageContent: newMessage)
 
+            } else {
+                let msg = message.elements(forName: "body").first?.stringValue
+                let from = message.from().user
+                let newMessage: [String : String] = ["msg" : msg!, "sender" : from!]
+                messageDelegate.newMessageReceived(messageContent: newMessage)
             }
         } else {
-            if message.type() == "groupchat" {
-                let arrSplitedVal = message.from().full().components(separatedBy: "/")
-                
-                if arrSplitedVal.count == 2 {
-                    let strFrom = arrSplitedVal.last
+            if let type = message.type() {
+                if type == "groupchat" {
+                    if let deleagte = messageDelegate {
+                        let msg = message.elements(forName: "body").first?.stringValue
+                        let from = message.from().user
+                        let newMessage: [String : String] = ["msg" : msg!, "sender" : from!]
+                        deleagte.newMessageReceived(messageContent: newMessage)
+                    }
                     
-                    if self.xmppStream.myJID.user != strFrom {
-                        if let _ = message.elements(forName: "composing").first?.stringValue {
-                            print("is composing")
-                        } else if let _ = message.elements(forName: "paused").first?.stringValue {
-                            print("is composing")
-                        } else if let _ = message.elements(forName: "gone").first?.stringValue {
-                            print("is gone")
-                        } else if let _ = message.elements(forName: "inactive").first?.stringValue {
-                            print("is inactive")
+                    let arrSplitedVal = message.from().full().components(separatedBy: "/")
+                    
+                    if arrSplitedVal.count == 2 {
+                        let strFrom = arrSplitedVal.last
+                        
+                        if self.xmppStream.myJID.user != strFrom {
+                            if let _ = message.elements(forName: "composing").first?.stringValue {
+                                print("is composing")
+                            } else if let _ = message.elements(forName: "paused").first?.stringValue {
+                                print("is composing")
+                            } else if let _ = message.elements(forName: "gone").first?.stringValue {
+                                print("is gone")
+                            } else if let _ = message.elements(forName: "inactive").first?.stringValue {
+                                print("is inactive")
+                            }
                         }
                     }
                 }

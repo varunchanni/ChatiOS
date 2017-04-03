@@ -58,7 +58,7 @@ class ChatTableViewCell: UITableViewCell {
         self.messageObject = msg
         message.text = msg.text!
         
-        if msg.outgoing {
+        if msg.outgoing == true {
             leadingConstraint.constant = 80
             trailingConstraint.constant = 15
             message.textAlignment = .right

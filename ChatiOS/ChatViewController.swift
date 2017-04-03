@@ -12,7 +12,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
 
     @IBOutlet weak var chatTable: UITableView!
     @IBOutlet weak var messageField: UITextField!
-    
+    var isGroup = false
     var chatUserId: String!
     var chatMessages: [Message] = [Message]()
     
@@ -43,7 +43,8 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     func getAllMessages() {
         chatMessages.removeAll()
-        let messages = ChatConnectivity.sharedConnectivity.loadMessageWithJid(jid: chatUserId!)
+        let chatUser = isGroup ? "\(self.title!)@conference.\(hostName)" : "\(self.title!)@\(hostName)"
+        let messages = ChatConnectivity.sharedConnectivity.loadMessageWithJid(jid: chatUser)
         for message in messages {
             let chatMessage = Message()
             chatMessage.initMessage(fromObject: message)
@@ -58,9 +59,17 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
     
     @IBAction func sendMessageAction(_ sender: Any) {
-        ChatConnectivity.sharedConnectivity.sendMessage(messageField.text!, toUser: chatUserId) { (success) in
-            self.messageField.text = ""
-            self.getAllMessages()
+        if isGroup {
+            ChatConnectivity.sharedConnectivity.sendMessageToGroup(messageField.text!, toUser: chatUserId, completion: { (sucess) in
+                self.messageField.text = ""
+                self.getAllMessages()
+            })
+        } else {
+            ChatConnectivity.sharedConnectivity.sendMessage(messageField.text!, toUser: chatUserId) { (success) in
+                self.messageField.text = ""
+                self.getAllMessages()
+            }
+
         }
     }
 

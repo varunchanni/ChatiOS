@@ -84,6 +84,7 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         // Pass the selected object to the new view controller.
         if segue.identifier == "ChatViewStoryboardID" {
             let chatViewController = segue.destination as! ChatViewController
+            chatViewController.isGroup = segmentChat.selectedSegmentIndex == 0 ? false : true
             chatViewController.chatUserId = self.selectedUserId
         }
     }
