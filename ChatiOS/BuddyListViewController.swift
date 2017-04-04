@@ -26,7 +26,11 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
     var onlineFriends: [String] = []
     var selectedUserId: String = String()
     
-    var groups = [String]()
+    var groups = [String](){
+        didSet{
+            buddyTableView.reloadData()
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,18 +57,17 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         if sender.selectedSegmentIndex == 1 {
             title = "Chat Roms"
             ChatConnectivity.sharedConnectivity.getChatRooms()
-            
             buddyNameLabel.text = "Chat Room"
             groupNameField.isHidden = true
             groupNameLabel.isHidden = true
         } else {
-            
             buddyNameLabel.text = "Buddy Name"
             groupNameField.isHidden = false
             groupNameLabel.isHidden = false
+            buddyTableView.reloadData()
         }
         self.title = title
-        buddyTableView.reloadData()
+        
     }
     // MARK: - Navigation
 

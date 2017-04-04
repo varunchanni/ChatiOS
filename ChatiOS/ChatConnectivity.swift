@@ -234,7 +234,6 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         if let moc = storage?.mainThreadManagedObjectContext {
             let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPMessageArchiving_Message_CoreDataObject", in: moc)
             let request = NSFetchRequest<NSFetchRequestResult>()
-            //request.fetchLimit = 10
             let sort = NSSortDescriptor(key: "timestamp", ascending: true)
             request.sortDescriptors = [sort]
             let predicateFrmt = "bareJidStr like %@ "
@@ -373,14 +372,11 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     
     func xmppRoomDidCreate(_ sender: XMPPRoom!) {
         print("Room created \n\(sender)")
+        sender.fetchConfigurationForm()
     }
     
     func xmppRoomDidJoin(_ sender: XMPPRoom!) {
         print("I joined room")
-        sender.fetchConfigurationForm()
-//        [sender inviteUser:[XMPPJID jidWithString:@"keithoys"] withMessage:@"Greetings!"];
-        let xmppJids = [XMPPJID(string: "amrit@\(hostName)"), XMPPJID(string: "channi@\(hostName)")]
-        sender.inviteUsers(xmppJids as! [XMPPJID], withMessage: "hello")
     }
     
     func xmppRoom(_ sender: XMPPRoom!, didReceive message: XMPPMessage!, fromOccupant occupantJID: XMPPJID!) {

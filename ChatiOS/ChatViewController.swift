@@ -41,7 +41,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
         // Dispose of any resources that can be recreated.
     }
     
-    func getAllMessages() {
+    func getAllMessages () {
         chatMessages.removeAll()
         let chatUser = isGroup ? "\(self.title!)@conference.\(hostName)" : "\(self.title!)@\(hostName)"
         let messages = ChatConnectivity.sharedConnectivity.loadMessageWithJid(jid: chatUser)
@@ -95,6 +95,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ChatTableViewCell") as! ChatTableViewCell
+        cell.isGroup = isGroup
         cell.fillMessage(msg: self.chatMessages[indexPath.row])
         return cell
     }

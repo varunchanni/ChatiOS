@@ -7,10 +7,13 @@
 //
 
 import UIKit
+import XMPPFramework
 
 class ChatTableViewCell: UITableViewCell {
 
     @IBOutlet weak var message: UILabel!
+    @IBOutlet weak var from: UILabel!
+    var isGroup:Bool = false
     @IBOutlet weak var imageBackground: UIImageView!
     
     @IBOutlet weak var leadingConstraint: NSLayoutConstraint!
@@ -57,15 +60,42 @@ class ChatTableViewCell: UITableViewCell {
         
         self.messageObject = msg
         message.text = msg.text!
+        if isGroup {
+            var xml = XMLElement()
+            do {
+                xml = try XMLElement(xmlString: msg.messageStr)
+            } catch {
+                print("Unable to convert message to xml")
+            }
+            if let node = xml.attribute(forName: "from") {
+                let array = node.description.components(separatedBy: "/")
+                if array.count > 1 {
+                    from.text = array[1]
+                }
+            } else if let node = xml.attribute(forName: "to") {
+                let array = node.description.components(separatedBy: "/")
+                if array.count > 1 {
+                    from.text = array[1]
+                }
+            }
+        } else {
+            let userName = msg.outgoing ? msg.streamJid : msg.jid
+            if let range: Range<String.Index> = userName?.range(of: "@") {
+                from.text = userName?.substring(to: range.lowerBound)
+            }
+
+        }
         
         if msg.outgoing == true {
             leadingConstraint.constant = 80
             trailingConstraint.constant = 15
             message.textAlignment = .right
+            from.textAlignment = .right
         } else {
             leadingConstraint.constant = 15
             trailingConstraint.constant = 80
             message.textAlignment = .left
+            from.textAlignment = .left
         }
         
         UIView.animate(withDuration: 0.05, animations: { 
