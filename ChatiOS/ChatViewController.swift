@@ -44,7 +44,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     func getAllMessages () {
         chatMessages.removeAll()
         let chatUser = isGroup ? "\(self.title!)@conference.\(hostName)" : "\(self.title!)@\(hostName)"
-        let messages = ChatConnectivity.sharedConnectivity.loadMessageWithJid(jid: chatUser)
+        let messages = isGroup ? ChatConnectivity.sharedConnectivity.loadGroupMessageWithJid(jid: chatUser) : ChatConnectivity.sharedConnectivity.loadMessageWithJid(jid: chatUser)
         for message in messages {
             let chatMessage = Message()
             chatMessage.initMessage(fromObject: message)

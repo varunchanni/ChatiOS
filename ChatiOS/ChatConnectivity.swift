@@ -228,6 +228,29 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         xmppRoom?.join(usingNickname: self.xmppStream.myJID.user, history: nil)
     }
     
+    func loadGroupMessageWithJid(jid: String) -> [AnyObject] {
+        var messages_arc = [AnyObject]()
+        let storage = XMPPMessageArchivingCoreDataStorage.sharedInstance()
+        if let moc = storage?.mainThreadManagedObjectContext {
+            let entityDescription = NSEntityDescription.entity(forEntityName: "XMPPMessageArchiving_Message_CoreDataObject", in: moc)
+            let request = NSFetchRequest<NSFetchRequestResult>()
+            let sort = NSSortDescriptor(key: "timestamp", ascending: true)
+            request.sortDescriptors = [sort]
+            let fromGroupMessage = "\(xmppRoom?.roomJID.user ?? "")@conference.\(hostName)/\(xmppStream.myJID.user ?? "")"
+            let predicateFrmt = "bareJidStr like %@ && NOT (messageStr CONTAINS[cd] %@)"
+            let predicate = NSPredicate(format: predicateFrmt, jid, fromGroupMessage)
+            request.predicate = predicate
+            request.entity = entityDescription
+            do {
+                messages_arc = try moc.fetch(request) as [AnyObject]
+            } catch {
+                print("Unable to fetch message")
+            }
+        }
+        
+        return messages_arc
+    }
+    
     func loadMessageWithJid(jid: String) -> [AnyObject] {
         var messages_arc = [AnyObject]()
         let storage = XMPPMessageArchivingCoreDataStorage.sharedInstance()
