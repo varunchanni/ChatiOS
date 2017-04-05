@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import XMPPFramework
 
 class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, MessageDelegate {
 
@@ -27,6 +28,8 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
         
         ChatConnectivity.sharedConnectivity.messageDelegate = self
         self.getAllMessages()
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem.init(barButtonSystemItem: .add, target: self, action: #selector(addGroupMember))
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -43,7 +46,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     func getAllMessages () {
         chatMessages.removeAll()
-        let chatUser = isGroup ? "\(self.title!)@conference.\(hostName)" : "\(self.title!)@\(hostName)"
+        let chatUser = isGroup ? "\(self.title ?? "")@conference.\(hostName)" : "\(self.title ?? "")@\(hostName)"
         let messages = isGroup ? ChatConnectivity.sharedConnectivity.loadGroupMessageWithJid(jid: chatUser) : ChatConnectivity.sharedConnectivity.loadMessageWithJid(jid: chatUser)
         for message in messages {
             let chatMessage = Message()
@@ -71,6 +74,21 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
             }
 
         }
+    }
+    
+    func addGroupMember() {
+        let alertController = UIAlertController.init(title: "Add User", message: "", preferredStyle: .alert)
+        alertController.addTextField(configurationHandler: nil)
+        let action = UIAlertAction.init(title: "Ok", style: .default) { (action) in
+            if ((alertController.textFields?.count)! > 0) {
+                let jid = XMPPJID(string: "\(alertController.textFields![0].text)@\(hostName)")
+                ChatConnectivity.sharedConnectivity.xmppRoom?.inviteUsers([jid!], withMessage: "Please join the room")
+            }
+        }
+        alertController.addAction(action)
+        let cancel = UIAlertAction.init(title: "Cancel", style: .cancel, handler: nil)
+        alertController.addAction(cancel)
+        self.present(alertController, animated: true, completion: nil)
     }
 
     func newMessageReceived(messageContent: [String : String]) {

@@ -86,7 +86,7 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
         } else {
             sharedConnection.chatDelegate = self
         }
-        allFriends = sharedConnection.getAllFriends()
+        //allFriends = sharedConnection.getAllFriends()
     }
     
     // MARK: - Action Method
@@ -128,8 +128,8 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
             sharedConnection.addBuddy(userId: self.buddyNameField.text!, groups: [self.groupNameField.text!])
         } else {
             sharedConnection.createOrJoinChatRoom(buddyNameField.text!)
-            self.selectedUserId = buddyNameField.text!
-            self.performSegue(withIdentifier: "ChatViewStoryboardID", sender: self)
+            //self.selectedUserId = buddyNameField.text!
+            //self.performSegue(withIdentifier: "ChatViewStoryboardID", sender: self)
         }
     }
     

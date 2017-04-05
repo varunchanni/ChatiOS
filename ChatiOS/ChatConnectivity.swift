@@ -273,6 +273,27 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         return messages_arc
     }
     
+    /*func getAllFriends() -> [AnyObject] {
+        var friends_arc = [AnyObject]()
+        if let moc = xmppRosterStorage.mainThreadManagedObjectContext {
+            let entity = NSEntityDescription.entity(forEntityName: "XMPPUserCoreDataStorageObject", in: moc)
+            let sort1 = NSSortDescriptor.init(key: "sectionNum", ascending: true)
+            let sort2 = NSSortDescriptor.init(key: "displayName", ascending: true)
+            let sortDescriptors = [sort1, sort2]
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>()
+            let predicate = NSPredicate(format: "ask==nil")
+            fetchRequest.predicate = predicate
+            fetchRequest.entity = entity
+            fetchRequest.sortDescriptors = sortDescriptors
+            do {
+                friends_arc = try moc.fetch(fetchRequest) as [AnyObject]
+            } catch {
+                print("Unable to fetch message")
+            }
+        }
+        return friends_arc
+    }*/
+    
     //MARK:- Delegate Methods
     
     func xmppStreamDidAuthenticate(_ sender: XMPPStream!) {
@@ -304,10 +325,18 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
     }
     
     func xmppStream(_ sender: XMPPStream!, didReceive presence: XMPPPresence!) {
-        
         let presenceType = presence.type()
         let username = sender.myJID.user
         let presenceFromUser = presence.from().user
+        let rosterCoreData = XMPPRosterCoreDataStorage.sharedInstance()
+        if let user = rosterCoreData?.user(for: presence.from(), xmppStream: xmppStream, managedObjectContext: xmppRosterStorage.mainThreadManagedObjectContext) {
+            if presenceFromUser != username {
+                user.update(with: presence, streamBareJidStr: presence.from().bare())
+                if presenceType == "unsubscribed" {
+                    xmppRoster.removeUser(presence.from())
+                }
+            }
+        }
         if !presence.from().domain.contains("conference") {
             if presenceFromUser != username {
                 if presenceType == "available" {
