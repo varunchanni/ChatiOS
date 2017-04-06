@@ -81,7 +81,7 @@ class ChatViewController: UIViewController, UITableViewDataSource, UITableViewDe
         alertController.addTextField(configurationHandler: nil)
         let action = UIAlertAction.init(title: "Ok", style: .default) { (action) in
             if ((alertController.textFields?.count)! > 0) {
-                let jid = XMPPJID(string: "\(alertController.textFields![0].text)@\(hostName)")
+                let jid = XMPPJID(string: "\(alertController.textFields![0].text!)@\(hostName)")
                 ChatConnectivity.sharedConnectivity.xmppRoom?.inviteUsers([jid!], withMessage: "Please join the room")
             }
         }

@@ -35,6 +35,13 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        guard let _ = UserDefaults.standard.object(forKey: "username"),
+            let _ = UserDefaults.standard.object(forKey: "password")else {
+                
+                self.performSegue(withIdentifier: "showLoginScreenId", sender: self)
+                return
+        }
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -136,7 +143,9 @@ class BuddyListViewController: UIViewController, UITableViewDelegate, UITableVie
     //MARK:- Chat Delegates
     
     func newBuddyOnline(buddyName: String) {
-        onlineBuddies.append(buddyName)
+        if !onlineBuddies.contains(buddyName) {
+            onlineBuddies.append(buddyName)
+        }
         self.buddyTableView.reloadData()
     }
     

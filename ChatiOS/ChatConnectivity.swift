@@ -11,7 +11,7 @@ import XMPPFramework
 
 let hostName = "amrits-macbook-pro.local"
 
-class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
+class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate, XMPPRosterDelegate {
     
     static let sharedConnectivity = ChatConnectivity()
     
@@ -73,7 +73,7 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
         self.xmppRoster?.addDelegate(self, delegateQueue: DispatchQueue.main)
         self.xmppRoster?.autoClearAllUsersAndResources = false
         
-        self.xmppRosterStorage = XMPPRosterCoreDataStorage(inMemoryStore: ())
+        self.xmppRosterStorage = XMPPRosterCoreDataStorage.init()
         
         self.xmppvCardStorage = XMPPvCardCoreDataStorage.sharedInstance()
         self.xmppvCardTempModule = XMPPvCardTempModule(vCardStorage: xmppvCardStorage)
@@ -418,6 +418,10 @@ class ChatConnectivity: NSObject, XMPPStreamDelegate, XMPPRoomDelegate {
             }
         }
         return true
+    }
+    /*(void)xmppRoster:(XMPPRoster *)sender didReceiveBuddyRequest:(XMPPPresence *)presence*/
+    func xmppRoster(_ sender: XMPPRoster!, didReceiveRosterPush iq: XMPPIQ!) {
+        
     }
     
     //MARK:- Room Delegate Methods
